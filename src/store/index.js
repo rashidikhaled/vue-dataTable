@@ -1,29 +1,50 @@
-import Vue from 'vue'
-import Vuex from 'vuex'
+import Vue from 'vue';
+import Vuex from 'vuex';
+import axios from 'axios';
 
-// import example from './module-example'
+Vue.use(Vuex);
 
-Vue.use(Vuex)
 
-/*
- * If not building with SSR mode, you can
- * directly export the Store instantiation;
- *
- * The function below can be async too; either use
- * async/await or return a Promise which resolves
- * with the Store instance.
- */
-
-export default function (/* { ssrContext } */) {
-  const Store = new Vuex.Store({
-    modules: {
-      // example
+export default new Vuex.Store({
+  state: {
+    data: [], // Holds table data
+    loading: false, // Loading state
+    searchQuery: '', // Search query
+  },
+  mutations: {
+    SET_DATA(state, data) {
+      state.data = data;
     },
+    SET_LOADING(state, loading) {
+      state.loading = loading;
+    },
+    SET_SEARCH_QUERY(state, query) {
+      state.searchQuery = query;
+    },
+  },
+  actions: {
+    async fetchData({ commit }) {
+      commit('SET_LOADING', true);
+      try {
+        const response = await axios.get('https://jsonplaceholder.typicode.com/users');
+        commit('SET_DATA', response.data);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        commit('SET_LOADING', false);
+      }
 
-    // enable strict mode (adds overhead!)
-    // for dev mode only
-    strict: process.env.DEBUGGING
-  })
 
-  return Store
-}
+
+    },
+  },
+  getters: {
+    filteredData(state) {
+      const filtered = state.data.filter((item) =>
+        item.name.toLowerCase().includes(state.searchQuery.toLowerCase())
+      );
+      console.log('Filtered Data:', filtered);
+      return filtered;
+    },
+  },
+});
